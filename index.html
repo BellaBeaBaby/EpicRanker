@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Musical Songs Ranking</title>
+    <style>
+        /* Reset default margins and paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #121212;
+            color: #FFFFFF;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            color: #BB86FC;
+            text-align: center;
+        }
+
+        #comparison {
+            background-color: #1E1E1E;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        #progressContainer {
+            width: 100%;
+            background-color: #333;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            height: 15px;
+            overflow: hidden;
+        }
+
+        #progressBar {
+            width: 0%;
+            height: 100%;
+            background-color: #BB86FC;
+            transition: width 0.3s;
+        }
+
+        #comparisonText {
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .song-button {
+            background-color: #BB86FC;
+            border: none;
+            color: #121212;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 45%;
+            /* Allow text to wrap and center it */
+            white-space: normal;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 50px; /* Reduced height to prevent stacking */
+            height: auto;
+        }
+
+        .song-button:hover {
+            background-color: #9F5FE4;
+        }
+
+        #finished {
+            display: none;
+            background-color: #1E1E1E;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        #finished h2 {
+            margin-bottom: 20px;
+            color: #BB86FC;
+        }
+
+        #finalRanked {
+            text-align: left;
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-left: 20px;
+        }
+
+        #finalRanked li {
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        #copyButton {
+            background-color: #BB86FC;
+            border: none;
+            color: #121212;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #copyButton:hover {
+            background-color: #9F5FE4;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .song-button {
+                width: 100%;
+            }
+
+            .button-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Rank the Epic Songs</h1>
+
+    <div id="comparison">
+        <div id="progressContainer">
+            <div id="progressBar"></div>
+        </div>
+        <p id="comparisonText">Initializing ranking process...</p>
+        <div class="button-container">
+            <button id="optionA" class="song-button">Option A</button>
+            <button id="optionB" class="song-button">Option B</button>
+        </div>
+    </div>
+
+    <div id="finished">
+        <h2>Ranking Completed!</h2>
+        <ol id="finalRanked">
+        </ol>
+        <button id="copyButton">Copy List</button>
+    </div>
+
+    <script>
+        const completeList = [
+            "The Horse and the Infant",
+            "Just a Man",
+            "Full Speed Ahead",
+            "Open Arms",
+            "Warrior of the Mind",
+            "Polyphemus",
+            "Survive",
+            "Remember Them",
+            "My Goodbye",
+            "Storm",
+            "Luck Runs Out",
+            "Keep Your Friends Close",
+            "Ruthlessness",
+            "Puppeteer",
+            "Wouldn't You Like",
+            "Done For",
+            "There Are Other Ways",
+            "The Underworld",
+            "No Longer You",
+            "Monster",
+            "Suffering",
+            "Different Beast",
+            "Scylla",
+            "Mutiny",
+            "Thunder Bringer",
+            "Legendary",
+            "Little Wolf",
+            "We'll Be Fine",
+            "Love in Paradise",
+            "God Games",
+            "Not Sorry for Loving You",
+            "Dangerous",
+            "Charybdis",
+            "Get in the Water",
+            "Six Hundred Strike",
+            "The Challenge",
+            "Hold Them Down",
+            "Odysseus",
+            "I Can't Help but Wonder",
+            "Would You Fall in Love with Me Again"
+        ];
+
+        let rankedList = [];
+        let currentIndex = 0;
+        let insertingSong = null;
+        let comparisonIndex = null;
+
+        const comparisonText = document.getElementById('comparisonText');
+        const optionA = document.getElementById('optionA');
+        const optionB = document.getElementById('optionB');
+        const finishedDiv = document.getElementById('finished');
+        const finalRankedOl = document.getElementById('finalRanked');
+        const copyButton = document.getElementById('copyButton');
+        const progressBar = document.getElementById('progressBar');
+
+        function initializeRanking() {
+            if (completeList.length === 0) {
+                comparisonText.textContent = "No songs to rank.";
+                optionA.style.display = 'none';
+                optionB.style.display = 'none';
+                return;
+            }
+            rankedList.push(completeList[0]);
+            currentIndex = 1;
+            updateProgress();
+            if (currentIndex < completeList.length) {
+                insertingSong = completeList[currentIndex];
+                comparisonIndex = rankedList.length - 1; 
+                promptComparison();
+            } else {
+                finishRanking();
+            }
+        }
+
+        function updateProgress() {
+            const progress = (currentIndex / completeList.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function promptComparison() {
+            if (comparisonIndex === null) {
+                comparisonIndex = rankedList.length - 1;
+            }
+            if (comparisonIndex < 0) {
+                rankedList.unshift(insertingSong);
+                proceedToNext();
+                return;
+            }
+            const currentRankedSong = rankedList[comparisonIndex];
+            comparisonText.textContent = `Which song is better?`;
+            optionA.textContent = insertingSong;
+            optionB.textContent = currentRankedSong;
+        }
+
+        function handleChoice(choice) {
+            const currentRankedSong = rankedList[comparisonIndex];
+            if (choice === 'A') {
+                comparisonIndex--;
+                if (comparisonIndex < 0) {
+                    rankedList.unshift(insertingSong);
+                    proceedToNext();
+                } else {
+                    promptComparison();
+                }
+            } else if (choice === 'B') {
+                rankedList.splice(comparisonIndex + 1, 0, insertingSong);
+                proceedToNext();
+            }
+            updateProgress();
+        }
+
+        function proceedToNext() {
+            currentIndex++;
+            if (currentIndex < completeList.length) {
+                insertingSong = completeList[currentIndex];
+                comparisonIndex = rankedList.length - 1;
+                promptComparison();
+            } else {
+                finishRanking();
+            }
+        }
+
+        function finishRanking() {
+            document.getElementById('comparison').style.display = 'none';
+            finishedDiv.style.display = 'block';
+            finalRankedOl.innerHTML = '';
+            rankedList.forEach((song, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${song}`;
+                finalRankedOl.appendChild(li);
+            });
+        }
+
+        function copyList() {
+            let listText = "Final Ranked List:\n";
+            rankedList.forEach((song, index) => {
+                listText += `${index + 1}. ${song}\n`;
+            });
+            navigator.clipboard.writeText(listText).then(() => {
+                alert("Ranked list copied to clipboard!");
+            }).catch(err => {
+                alert("Failed to copy the list.");
+            });
+        }
+
+        optionA.addEventListener('click', () => handleChoice('A'));
+        optionB.addEventListener('click', () => handleChoice('B'));
+        copyButton.addEventListener('click', copyList);
+
+        window.onload = function() {
+            initializeRanking();
+        };
+    </script>
+
+</body>
+</html>
